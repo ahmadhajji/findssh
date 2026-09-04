@@ -1,0 +1,10 @@
+node_modules/
+dist/
+release/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+.env*
+.agents/
+.codex/
