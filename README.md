@@ -1,81 +1,79 @@
+<p align="center">
+  <img src="assets/icon.png" width="104" alt="FindSSH icon">
+</p>
+
 # FindSSH
 
-A Finder-style macOS file manager for SSH servers. Connect to a server, browse over SFTP, and transfer files between your Mac and the server. No server-side installation or cloud account is needed.
+**Your server, in a familiar file browser.**
 
-FindSSH is independent software. It uses original artwork and does not include Apple's Finder code or assets.
+A Finder-style macOS app for browsing servers over SSH and SFTP. Connect with an IP address, hostname, or Tailscale name, then move files between your Mac and your server. No cloud account or server-side installation required beyond SSH with SFTP enabled.
 
-## Install
+[![CI](https://github.com/ahmadhajji/findssh/actions/workflows/ci.yml/badge.svg)](https://github.com/ahmadhajji/findssh/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ahmadhajji/findssh)](https://github.com/ahmadhajji/findssh/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Get the DMG from [Releases](https://github.com/ahmadhajji/findssh/releases).
+![FindSSH browsing a server in list view](docs/images/browser.png)
 
-- Apple Silicon, including M1 and later: choose `arm64`.
-- Intel Mac: choose `x64`.
+_The app running against a disposable local SFTP test server. Window decorations vary by platform._
 
-Open the DMG and drag FindSSH into Applications. macOS 13 or later is required. The first release is ad hoc signed and not Apple-notarized. Attempt to open the app, then approve it in System Settings > Privacy & Security > Open Anyway. Do not disable Gatekeeper globally. If macOS does not allow the override, use the local build below.
+## Download
+
+Requires **macOS 13 or later**.
+
+| Your Mac                    | Installer                                                                                                            |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Apple Silicon, M1 and later | [Download for Apple Silicon](https://github.com/ahmadhajji/findssh/releases/download/v0.1.1/FindSSH-0.1.1-arm64.dmg) |
+| Intel                       | [Download for Intel](https://github.com/ahmadhajji/findssh/releases/download/v0.1.1/FindSSH-0.1.1-x64.dmg)           |
+
+[All releases, ZIP builds, and SHA-256 checksums](https://github.com/ahmadhajji/findssh/releases). Open the DMG and drag FindSSH into Applications.
+
+### First launch and signing
+
+**FindSSH is ad hoc signed and is not notarized by Apple.** This free signature requires no Apple Developer account. It lets macOS check the app bundle's integrity, but it does not establish a verified developer identity. It is different from an Apple Development or Developer ID certificate.
+
+If macOS blocks the first launch:
+
+1. Try opening FindSSH from Applications once.
+2. Open **System Settings → Privacy & Security**.
+3. Click **Open Anyway** for FindSSH, then confirm **Open**.
+
+This is [Apple's documented approval flow](https://support.apple.com/en-gb/102445) for trusted apps from unidentified developers or without notarization. The available options depend on macOS and device policy; ad hoc signing cannot guarantee an override. Neither unsigned nor ad hoc signed apps have one universal Gatekeeper outcome. We do not ask you to disable Gatekeeper or remove quarantine using Terminal. If approval is unavailable, see [local development](docs/DEVELOPMENT.md) or consult your Mac's administrator.
+
+Both architectures use explicit ad hoc signing. CI checks the bundle signature and runs the packaged app; the [release verification workflow](.github/workflows/verify-release.yml) also checks downloaded DMG and ZIP contents. See [Mac verification](docs/MAC-VERIFICATION.md) for commands and the installation checklist.
+
+## What you can do
+
+- Connect with a password, SSH key, SSH agent, or keyboard-interactive authentication.
+- Browse home and root in list or icon view, sort columns, show hidden files, and jump to a path.
+- Upload and download files or folders. Drag files in from Finder.
+- Copy or move between remote folders, create folders, rename, and inspect file details.
+- Edit UTF-8 text with conflict detection and atomic saves.
+
+Deletion is permanent and asks for confirmation. Transfers reject existing destination names. The editor accepts files up to 2 MB and requires the OpenSSH POSIX rename extension for saves. Read the [usage guide and keyboard shortcuts](docs/USAGE.md) before working with important files.
 
 ## Connect
 
-Enter a hostname, IP address or Tailscale DNS name, your server username and SSH port. Tailscale must already be connected on the Mac for private tailnet addresses. FindSSH uses the SSH agent if available, then your default `~/.ssh/id_ed25519`, `id_rsa` and `id_ecdsa` keys. You can choose a private key explicitly. Encrypted keys prompt for a passphrase. Password and keyboard-interactive login are supported.
+Enter the server address and your SSH username, then click **Connect**. Approve the server fingerprint after comparing it with your server, and enter a password or key passphrase if prompted. Tailscale must already be connected on your Mac to use tailnet addresses.
 
-Compare the first connection's SHA-256 fingerprint with your server before accepting. FindSSH remembers it and refuses changed keys. Trust is stored separately from OpenSSH's `known_hosts`, in `~/Library/Application Support/FindSSH/connections.json`. If you intentionally rotate a server key, quit the app, back up this file and remove only that server's entry from `hosts`, then reconnect and verify the new fingerprint. Passwords and passphrases are never persisted.
+FindSSH opens the remote account's home directory. **Filesystem** in the sidebar opens `/`. Your server account's permissions apply throughout; the app does not elevate access.
 
-The initial folder is the remote account's home. The sidebar also opens `/`. You can browse everything that account is allowed to access; FindSSH does not elevate permissions.
+Passwords and passphrases are never saved. Connections go directly from your Mac to the SSH server. There is no telemetry or analytics. See [security and local data](SECURITY.md).
 
-## File operations
-
-Use list or icon view; click column headings to sort. Double-click folders to navigate and text files to edit. Command-click selects multiple items, Shift-click selects a range, and arrow keys change the selection. Right-click for file actions. The toolbar handles uploads, downloads and folder creation. Drag files or folders from Finder into the browser to upload them. Downloads use a native destination-folder picker.
-
-Copy and Cut in the context menu put remote paths on FindSSH's internal clipboard. Navigate to another remote directory and choose Paste here. These operations also use Command-C/X/V while the file browser is focused. Copy streams files through the Mac; it does not execute a shell command on the server.
-
-Existing destinations are rejected. Folder transfers stop at the first error and may leave completed items in the new folder. Individual files transfer through temporary names, which are removed on error when the server remains reachable. Deletion is permanent and always asks for confirmation. It does not use Mac Trash.
-
-The built-in editor accepts UTF-8 text up to 2 MB. Command-S saves to the server. Saves check for external changes and require the OpenSSH POSIX rename extension for atomic replacement. Replacement preserves basic permission bits but not the original owner, ACLs, hard links or extended attributes. Close the editor to discard changes with confirmation. Download binary files to open them in a local app.
-
-## Keyboard shortcuts
-
-| Action                          | Shortcut                     |
-| ------------------------------- | ---------------------------- |
-| Connect                         | Command-K                    |
-| New folder                      | Command-Shift-N              |
-| Upload files                    | Command-U                    |
-| Download selected               | Command-Shift-D              |
-| Rename selected                 | Return                       |
-| Open selected text/folder       | Space                        |
-| Delete selected                 | Command-Delete               |
-| Icon / list view                | Command-1 / Command-2        |
-| Show hidden files               | Command-Shift-.              |
-| Go to folder                    | Command-Shift-G              |
-| Home / parent                   | Command-Shift-H / Command-Up |
-| Back / forward                  | Command-[ / Command-]        |
-| Refresh                         | Command-R                    |
-| Select all / copy / cut / paste | Command-A / C / X / V        |
-
-## Build on a Mac
-
-Install Node.js 22 and pnpm 10.30.3, then run:
+## Build and contribute
 
 ```sh
 git clone https://github.com/ahmadhajji/findssh.git
 cd findssh
 pnpm install --frozen-lockfile
-pnpm check
-pnpm test:e2e
 pnpm dev
-pnpm package:mac --arm64
 ```
 
-Use `--x64` for Intel. Output goes to `release/`. A local build can be run directly with `pnpm dev`. No Apple Developer account is needed for local development.
+Requires Node.js 22.12 or later in the Node 22 series and pnpm 10.30.3. Build Mac installers with `pnpm package:mac --arm64` or `pnpm package:mac --x64` on macOS. Output goes to `release/`.
 
-## Development and tests
+[Development and architecture](docs/DEVELOPMENT.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Report a bug](https://github.com/ahmadhajji/findssh/issues/new/choose)
 
-The app uses Electron, strict TypeScript, React, TanStack Table and ssh2. All SSH, local file access and native dialogs run in the main process. The renderer is sandboxed with context isolation, no Node access, a restricted CSP and a narrow IPC bridge. Main-process IPC validates the sender and arguments. No telemetry or analytics is included.
+## Scope
 
-`pnpm check` runs lint, typecheck, unit/integration tests and a production build. Integration tests start an ephemeral SSH server on localhost and use the system's real OpenSSH `sftp-server`. They use temporary fixture files and generated host keys, without production credentials. On Linux, install `openssh-sftp-server` and `xvfb`. Run `xvfb-run -a pnpm test:e2e` for desktop tests. On macOS, run `pnpm test:e2e` directly. Playwright's `--no-sandbox` launch flag is confined to test code; normal launches retain Electron sandboxing.
+FindSSH provides the core remote file-manager workflow. Column/gallery views, tabs, Finder tags, binary previews, volume mounting, remote Trash/undo, SSH config aliases/ProxyJump, recursive server search, and resumable transfer queues are not implemented. Directory symlinks can be opened; transfers refuse symlinks. There is one active connection per app instance.
 
-Pull requests run Linux checks and desktop tests plus a macOS build and desktop test. Pushing a version tag such as `v0.1.0` runs both Mac architectures, then publishes DMG/ZIP installers and checksums only after both succeed. Release code signing and notarization must be configured with an Apple Developer identity before distributing a signed release.
-
-## Current scope
-
-The app provides the core remote file-manager workflow. It is not an exact Finder clone. Column/gallery view, tabs, Finder tags, binary previews, volume mounting, remote Trash/undo, SSH config aliases/ProxyJump, recursive server search and resumable transfer queues are not implemented. Directory symlinks can be opened; transfers refuse symlinks to avoid unintended traversal. There is one active connection per app instance.
-
-See [Mac verification handoff](docs/MAC-HANDOFF.md) and [release notes](docs/RELEASE.md).
+FindSSH is independent software, with original artwork and no Apple Finder code or assets. It is not affiliated with Apple and does not reproduce every Finder feature. Available under the [MIT license](LICENSE).

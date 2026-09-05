@@ -17,7 +17,7 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "package:mac": "pnpm build && electron-builder --mac --publish never",
     "package:linux": "pnpm build && electron-builder --linux dir --publish never",
-    "format:check": "prettier --check src tests scripts *.ts *.mjs *.json .github/workflows"
+    "format:check": "prettier --check src tests scripts *.ts *.mjs *.json *.md docs .github"
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.3",
@@ -94,5 +94,13 @@
       "ssh2"
     ]
   },
-  "type": "module"
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahmadhajji/findssh.git"
+  },
+  "homepage": "https://github.com/ahmadhajji/findssh#readme",
+  "bugs": {
+    "url": "https://github.com/ahmadhajji/findssh/issues"
+  }
 }

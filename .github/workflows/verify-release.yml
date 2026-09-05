@@ -1,0 +1,44 @@
+name: Verify release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (blank for latest)
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      matrix:
+        include:
+          - runner: macos-latest
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and verify published installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$RELEASE_TAG" ]]; then
+            RELEASE_TAG=$(gh release view --json tagName --jq .tagName)
+          fi
+          mkdir release
+          gh release download "$RELEASE_TAG" --dir release \
+            --pattern "*-${ARCH}.dmg" --pattern "*-${ARCH}.zip" \
+            --pattern "SHA256SUMS-${ARCH}.txt"
+          shasum -a 256 --check "release/SHA256SUMS-${ARCH}.txt"
+          ditto -x -k release/*.zip "$RUNNER_TEMP/findssh-zip"
+          bash scripts/verify-mac-signature.sh "$RUNNER_TEMP/findssh-zip/FindSSH.app"
+          mount_path="$RUNNER_TEMP/findssh-dmg"
+          hdiutil attach release/*.dmg -readonly -nobrowse -mountpoint "$mount_path"
+          trap 'hdiutil detach "$mount_path"' EXIT
+          bash scripts/verify-mac-signature.sh "$mount_path/FindSSH.app"
