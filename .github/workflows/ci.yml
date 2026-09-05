@@ -47,6 +47,8 @@ jobs:
       - run: pnpm check
       - run: pnpm test:e2e
       - run: pnpm package:mac --${{ matrix.arch }}
+        env:
+          CSC_FOR_PULL_REQUEST: "true"
       - name: Verify ad hoc signature
         run: bash scripts/verify-mac-signature.sh "release/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/FindSSH.app"
       - run: pnpm exec playwright test
