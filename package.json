@@ -1,0 +1,98 @@
+{
+  "name": "findssh",
+  "version": "0.1.0",
+  "description": "A Finder-style SFTP file manager for macOS",
+  "author": "Ahmad Hajji",
+  "private": true,
+  "license": "MIT",
+  "main": "dist/main/index.cjs",
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "dev": "pnpm build && electron .",
+    "build": "tsx scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run",
+    "test:e2e": "pnpm exec install-electron && pnpm build && playwright test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "package:mac": "pnpm build && electron-builder --mac --publish never",
+    "package:linux": "pnpm build && electron-builder --linux dir --publish never",
+    "format:check": "prettier --check src tests scripts *.ts *.mjs *.json .github/workflows"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ssh2": "^1.17.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.58.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/ssh2": "^1.15.5",
+    "electron": "^44.2.0",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.0.0",
+    "globals": "^16.0.0",
+    "prettier": "^3.9.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.0.0",
+    "vite": "^7.0.0",
+    "vitest": "^3.2.0"
+  },
+  "build": {
+    "appId": "com.ahmadhajji.findssh",
+    "productName": "FindSSH",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "identity": "-",
+      "hardenedRuntime": true,
+      "artifactName": "FindSSH-${version}-${arch}.${ext}",
+      "minimumSystemVersion": "13.0",
+      "icon": "assets/icon.png"
+    },
+    "dmg": {
+      "title": "FindSSH",
+      "contents": [
+        {
+          "x": 130,
+          "y": 160
+        },
+        {
+          "x": 410,
+          "y": 160,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "cpu-features",
+      "ssh2"
+    ]
+  },
+  "type": "module"
+}
