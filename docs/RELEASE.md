@@ -1,4 +1,6 @@
-FindSSH's first release brings a Finder-style file browser to SSH servers.
+FindSSH 0.1.1 fixes quit cancellation so the app stays responsive and retains edits when you choose Keep open. It confirms before starting window shutdown, and keeps the regular window-close behavior separate.
+
+This release includes the Finder-style SFTP file manager introduced in 0.1.0.
 
 - Connect to IP addresses, DNS names and Tailscale hostnames with password, private key, SSH agent or keyboard-interactive authentication.
 - Browse your home folder and filesystem root in sortable list or icon views. Navigate with breadcrumbs, history and Go to folder; filter filenames and show hidden files.
@@ -8,7 +10,7 @@ FindSSH's first release brings a Finder-style file browser to SSH servers.
 
 ## Install
 
-Download `FindSSH-0.1.0-arm64.dmg` for an Apple Silicon Mac, or `FindSSH-0.1.0-x64.dmg` for an Intel Mac. Open it and drag FindSSH into Applications. Requires macOS 13 or later.
+Download `FindSSH-0.1.1-arm64.dmg` for an Apple Silicon Mac, or `FindSSH-0.1.1-x64.dmg` for an Intel Mac. Open it and drag FindSSH into Applications. Requires macOS 13 or later.
 
 This release is ad hoc signed and is not Apple-notarized. After attempting to open FindSSH, use System Settings > Privacy & Security > Open Anyway to approve this app. Do not disable Gatekeeper globally. If macOS cannot offer an override, build locally using the repository instructions.
 

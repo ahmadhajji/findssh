@@ -19,7 +19,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: sudo apt-get update && sudo apt-get install -y openssh-sftp-server xvfb
       - run: pnpm check
-      - run: xvfb-run -a pnpm test:e2e
+      - run: xvfb-run -a pnpm test:e2e --repeat-each=3
       - uses: actions/upload-artifact@v4
         if: always()
         with:
