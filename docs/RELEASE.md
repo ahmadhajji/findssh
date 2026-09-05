@@ -12,7 +12,7 @@ This release includes the Finder-style SFTP file manager introduced in 0.1.0.
 
 Download `FindSSH-0.1.1-arm64.dmg` for an Apple Silicon Mac, or `FindSSH-0.1.1-x64.dmg` for an Intel Mac. Open it and drag FindSSH into Applications. Requires macOS 13 or later.
 
-This release is ad hoc signed and is not Apple-notarized. After attempting to open FindSSH, use System Settings > Privacy & Security > Open Anyway to approve this app. Do not disable Gatekeeper globally. If macOS cannot offer an override, build locally using the repository instructions.
+This release uses free ad hoc signing, with no Apple-issued developer certificate or notarization. After trying to open FindSSH, macOS may let you approve it in System Settings > Privacy & Security > Open Anyway, then confirm Open. Availability depends on macOS and device policy. See [Apple's instructions](https://support.apple.com/en-gb/102445) and the [installation guide](https://github.com/ahmadhajji/findssh#first-launch-and-signing). No Apple Developer account is required to build the app.
 
 ZIP builds and SHA-256 checksums are also included.
 

@@ -1,0 +1,10 @@
+name: Feature request
+description: Propose a file-management workflow or improvement.
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What are you trying to do?
+      description: Describe the current obstacle and how you would like FindSSH to help.
+    validations:
+      required: true
