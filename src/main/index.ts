@@ -22,10 +22,38 @@ import {
 let window: BrowserWindow | null = null;
 let session: Session;
 let dirtyEditor = false;
-let quitRequested = false;
-app.on("before-quit", () => {
-  quitRequested = true;
+let allowQuit = false;
+let confirmingClose = false;
+app.on("before-quit", (event) => {
+  if (!window || allowQuit || (!session.busy && !dirtyEditor)) return;
+  event.preventDefault();
+  if (confirmingClose) return;
+  void confirmClose().then((accepted) => {
+    if (accepted) {
+      allowQuit = true;
+      app.quit();
+    }
+  });
 });
+async function confirmClose(): Promise<boolean> {
+  confirmingClose = true;
+  try {
+    const result = await dialog.showMessageBox(currentWindow(), {
+      type: "warning",
+      message: "Close FindSSH?",
+      detail:
+        "Unsaved edits will be discarded and active operations will stop. Incomplete folder transfers may remain.",
+      buttons: ["Keep open", "Close"],
+      cancelId: 0,
+      defaultId: 0,
+    });
+    return result.response === 1;
+  } catch {
+    return false;
+  } finally {
+    confirmingClose = false;
+  }
+}
 const prompts = new Map<string, (answers: string[] | null) => void>();
 const documentPath = join(__dirname, "../renderer/index.html");
 const documentURL = pathToFileURL(documentPath).href;
@@ -184,28 +212,15 @@ function makeWindow(): void {
   );
   let closing = false;
   window.on("close", (event) => {
-    if ((session.busy || dirtyEditor) && !closing) {
-      event.preventDefault();
-      void dialog
-        .showMessageBox(currentWindow(), {
-          type: "warning",
-          message: "Close FindSSH?",
-          detail:
-            "Unsaved edits will be discarded and active operations will stop. Incomplete folder transfers may remain.",
-          buttons: ["Keep open", "Close"],
-          cancelId: 0,
-          defaultId: 0,
-        })
-        .then((result) => {
-          if (result.response === 1) {
-            closing = true;
-            if (quitRequested) app.quit();
-            else window?.close();
-          } else {
-            quitRequested = false;
-          }
-        });
-    }
+    if (allowQuit || closing || (!session.busy && !dirtyEditor)) return;
+    event.preventDefault();
+    if (confirmingClose) return;
+    void confirmClose().then((accepted) => {
+      if (accepted) {
+        closing = true;
+        window?.close();
+      }
+    });
   });
   window.on("closed", () => {
     session.disconnect();

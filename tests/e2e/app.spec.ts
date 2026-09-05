@@ -131,12 +131,18 @@ test("connects and manages files in the desktop app", async () => {
     await expect(page.getByLabel("File contents")).toHaveValue(
       "Do not lose this draft",
     );
+    await page
+      .getByLabel("File contents")
+      .fill("Still editable after cancelling Quit");
+    await expect(page.getByLabel("File contents")).toHaveValue(
+      "Still editable after cancelling Quit",
+    );
     await test.step("Stop SSH fixture", () => server.close());
     await expect(
       page.getByText(/Connection lost. Your draft is preserved/),
     ).toBeVisible();
     await expect(page.getByLabel("File contents")).toHaveValue(
-      "Do not lose this draft",
+      "Still editable after cancelling Quit",
     );
     await expect(
       page.getByRole("button", { name: "Save to server" }),
@@ -146,7 +152,7 @@ test("connects and manages files in the desktop app", async () => {
       .getByRole("button", { name: "Keep editing", exact: true })
       .click();
     await expect(page.getByLabel("File contents")).toHaveValue(
-      "Do not lose this draft",
+      "Still editable after cancelling Quit",
     );
     expect(errors).toEqual([]);
     const closed = application.waitForEvent("close");
