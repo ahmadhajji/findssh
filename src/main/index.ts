@@ -22,6 +22,10 @@ import {
 let window: BrowserWindow | null = null;
 let session: Session;
 let dirtyEditor = false;
+let quitRequested = false;
+app.on("before-quit", () => {
+  quitRequested = true;
+});
 const prompts = new Map<string, (answers: string[] | null) => void>();
 const documentPath = join(__dirname, "../renderer/index.html");
 const documentURL = pathToFileURL(documentPath).href;
@@ -195,7 +199,10 @@ function makeWindow(): void {
         .then((result) => {
           if (result.response === 1) {
             closing = true;
-            window?.close();
+            if (quitRequested) app.quit();
+            else window?.close();
+          } else {
+            quitRequested = false;
           }
         });
     }

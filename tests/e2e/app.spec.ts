@@ -12,15 +12,17 @@ test("connects and manages files in the desktop app", async () => {
   await mkdir(join(home, "Documents"));
   await mkdir(join(home, "Photos"));
   const server = await startServer(home);
-  const application = await electron.launch({
-    executablePath: process.env.FINDSSH_EXECUTABLE,
-    args: [
-      ...(process.env.FINDSSH_EXECUTABLE ? [] : ["."]),
-      `--user-data-dir=${join(root, "profile")}`,
-      "--no-sandbox",
-    ],
-    env: { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" },
-  });
+  const application = await test.step("Launch Electron", () =>
+    electron.launch({
+      executablePath: process.env.FINDSSH_EXECUTABLE,
+      args: [
+        ...(process.env.FINDSSH_EXECUTABLE ? [] : ["."]),
+        `--user-data-dir=${join(root, "profile")}`,
+        "--no-sandbox",
+      ],
+      env: { ...process.env, ELECTRON_DISABLE_SECURITY_WARNINGS: "true" },
+    }));
+  const appProcess = application.process();
   try {
     await application.evaluate(({ dialog }) => {
       dialog.showMessageBox = async () => ({
@@ -119,17 +121,17 @@ test("connects and manages files in the desktop app", async () => {
     await page.getByText("Renamed.md", { exact: true }).dblclick();
     await page.getByLabel("File contents").fill("Do not lose this draft");
     await expect(page.getByText(/Unsaved changes/)).toBeVisible();
-    await application.evaluate(({ dialog, BrowserWindow }) => {
+    await application.evaluate(({ dialog, app }) => {
       dialog.showMessageBox = async () => ({
         response: 0,
         checkboxChecked: false,
       });
-      BrowserWindow.getAllWindows()[0]?.close();
+      app.quit();
     });
     await expect(page.getByLabel("File contents")).toHaveValue(
       "Do not lose this draft",
     );
-    await server.close();
+    await test.step("Stop SSH fixture", () => server.close());
     await expect(
       page.getByText(/Connection lost. Your draft is preserved/),
     ).toBeVisible();
@@ -141,15 +143,32 @@ test("connects and manages files in the desktop app", async () => {
     ).toBeDisabled();
     await page.getByRole("button", { name: "Close", exact: true }).click();
     await page
-      .getByRole("button", { name: "Discard changes", exact: true })
+      .getByRole("button", { name: "Keep editing", exact: true })
       .click();
-    await expect(
-      page.getByRole("heading", { name: "Your server. Familiar territory." }),
-    ).toBeVisible();
+    await expect(page.getByLabel("File contents")).toHaveValue(
+      "Do not lose this draft",
+    );
     expect(errors).toEqual([]);
+    const closed = application.waitForEvent("close");
+    await application.evaluate(({ dialog, app }) => {
+      dialog.showMessageBox = async () => ({
+        response: 1,
+        checkboxChecked: false,
+      });
+      setTimeout(() => app.quit(), 0);
+    });
+    await test.step("Wait for confirmed app quit", () => closed);
   } finally {
-    await application.close();
-    await server.close();
+    if (appProcess.exitCode === null) {
+      await application
+        .evaluate(({ BrowserWindow }) => {
+          for (const window of BrowserWindow.getAllWindows()) window.destroy();
+        })
+        .catch(() => undefined);
+      await test.step("Close desktop test application", () =>
+        application.close());
+    }
+    await test.step("Stop SSH fixture", () => server.close());
     await rm(root, { recursive: true, force: true });
   }
 });
@@ -163,14 +182,16 @@ test("failed listings on a new server cannot expose the old server's files", asy
   await writeFile(join(home, "First server only.txt"), "first");
   const first = await startServer(home);
   const second = await startServer(secondHome, { denyListing: true });
-  const application = await electron.launch({
-    executablePath: process.env.FINDSSH_EXECUTABLE,
-    args: [
-      ...(process.env.FINDSSH_EXECUTABLE ? [] : ["."]),
-      `--user-data-dir=${join(root, "profile")}`,
-      "--no-sandbox",
-    ],
-  });
+  const application = await test.step("Launch Electron", () =>
+    electron.launch({
+      executablePath: process.env.FINDSSH_EXECUTABLE,
+      args: [
+        ...(process.env.FINDSSH_EXECUTABLE ? [] : ["."]),
+        `--user-data-dir=${join(root, "profile")}`,
+        "--no-sandbox",
+      ],
+    }));
+  const appProcess = application.process();
   try {
     await application.evaluate(({ dialog }) => {
       dialog.showMessageBox = async () => ({
@@ -203,7 +224,15 @@ test("failed listings on a new server cannot expose the old server's files", asy
       page.getByRole("button", { name: "Download selection" }),
     ).toBeDisabled();
   } finally {
-    await application.close();
+    if (appProcess.exitCode === null) {
+      await application
+        .evaluate(({ BrowserWindow }) => {
+          for (const window of BrowserWindow.getAllWindows()) window.destroy();
+        })
+        .catch(() => undefined);
+      await test.step("Close desktop test application", () =>
+        application.close());
+    }
     await first.close();
     await second.close();
     await rm(root, { recursive: true, force: true });
